@@ -1,0 +1,40 @@
+---
+- name: Deploiement stack monitoring CYNA
+  hosts: cyna_servers
+  become: yes
+
+  tasks:
+    - name: Mise a jour des paquets
+      apt:
+        update_cache: yes
+
+    - name: Installation Docker
+      shell: curl -fsSL https://get.docker.com | sh
+      args:
+        creates: /usr/bin/docker
+
+    - name: Creation dossier monitoring
+      file:
+        path: /opt/cyna/monitoring
+        state: directory
+
+    - name: Deploiement Prometheus et Grafana
+      docker_compose:
+        project_src: /opt/cyna/monitoring
+        state: present
+
+    - name: Verification Prometheus
+      uri:
+        url: http://localhost:9090
+        status_code: 200
+      register: prometheus_check
+
+    - name: Verification Grafana
+      uri:
+        url: http://localhost:3000
+        status_code: 200
+      register: grafana_check
+
+    - name: Afficher statut
+      debug:
+        msg: "Prometheus: {{ prometheus_check.status }} - Grafana: {{ grafana_check.status }}"

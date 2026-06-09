@@ -1,0 +1,21 @@
+---
+- name: Sauvegarde configurations CYNA
+  hosts: cyna_servers
+  become: yes
+
+  tasks:
+    - name: Creation dossier backup
+      file:
+        path: /opt/cyna/backups
+        state: directory
+
+    - name: Sauvegarde docker-compose files
+      archive:
+        path: /opt/cyna
+        dest: /opt/cyna/backups/cyna-backup-{{ ansible_date_time.date }}.tar.gz
+        exclude_path:
+          - /opt/cyna/backups
+
+    - name: Afficher confirmation
+      debug:
+        msg: "Backup cree le {{ ansible_date_time.date }}"

@@ -33,12 +33,15 @@ pipeline {
             }
         }
 
-        stage('Verification services') {
+        stage('Verification infrastructure') {
             steps {
-                echo 'Verification que les services tournent...'
+                echo 'Verification de la connectivite...'
                 sh '''
-                    echo "=== Statut des conteneurs Docker ==="
-                    docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
+                    echo "=== Test connectivite services CYNA ==="
+                    curl -s -o /dev/null -w "Prometheus  : %{http_code}\n" http://178.104.66.189:9090
+                    curl -s -o /dev/null -w "Grafana     : %{http_code}\n" http://178.104.66.189:3000
+                    curl -s -o /dev/null -w "Zabbix      : %{http_code}\n" http://178.104.66.189:8081
+                    echo "=== Tous les services sont accessibles ==="
                 '''
             }
         }

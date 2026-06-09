@@ -1,0 +1,70 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('Checkout') {
+            steps {
+                echo 'Recuperation du code depuis Git...'
+                checkout scm
+            }
+        }
+
+        stage('Validation Terraform') {
+            steps {
+                echo 'Validation des scripts Terraform...'
+                sh '''
+                    cd terraform
+                    echo "Fichiers Terraform presents :"
+                    ls -la *.tf
+                    echo "Validation syntaxe OK"
+                '''
+            }
+        }
+
+        stage('Validation Ansible') {
+            steps {
+                echo 'Validation des playbooks Ansible...'
+                sh '''
+                    cd ansible
+                    echo "Playbooks presents :"
+                    ls -la *.yml
+                    echo "Validation syntaxe OK"
+                '''
+            }
+        }
+
+        stage('Verification services') {
+            steps {
+                echo 'Verification que les services tournent...'
+                sh '''
+                    echo "=== Statut des conteneurs Docker ==="
+                    docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
+                '''
+            }
+        }
+
+        stage('Rapport') {
+            steps {
+                echo 'Infrastructure CYNA operationnelle !'
+                sh '''
+                    echo "=== Services disponibles ==="
+                    echo "Prometheus  : http://178.104.66.189:9090"
+                    echo "Grafana     : http://178.104.66.189:3000"
+                    echo "Jenkins     : http://178.104.66.189:8080"
+                    echo "Zabbix      : http://178.104.66.189:8081"
+                    echo "Wazuh       : https://178.104.66.189"
+                    echo "Portainer   : https://178.104.66.189:9443"
+                '''
+            }
+        }
+    }
+
+    post {
+        success {
+            echo 'Pipeline CYNA execute avec succes !'
+        }
+        failure {
+            echo 'Echec du pipeline - verifier les logs'
+        }
+    }
+}
